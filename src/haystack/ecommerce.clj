@@ -1,0 +1,154 @@
+(ns haystack.ecommerce
+  (:require [clojure.java.jdbc :as j]
+            [clojure.string :refer [split]]
+            ))
+
+(def ^:private categories-atom (atom nil))
+(def ^:private manufacturers-atom (atom nil))
+
+(defn clear-empty
+  "remove key/values where the value is empty (nil or null string)"
+  [m]
+  (into {}
+        (remove (fn [[k v]] (or (nil? v) (= v ""))) m)))
+;; (clear-empty {:a 3 :b nil :c 2 :d ""})
+
+(def db-map (atom {:subprotocol "mysql"
+                   :subname (or (System/getenv "DB_HOST") "//localhost:3306/blue_harvest_dev")
+                   :user (or (System/getenv "DB_USER") "user")
+                   :password (or (System/getenv "DB_PW") "pw")}))
+
+(def product-query-sql
+"SELECT
+now() AS 'updated-at',
+'product' AS `_type`,
+`products`.`id` AS `bh-product-id`,
+`products`.`manufacturer_id` AS `manufacturer-id`,
+`products`.`product_class_id` AS `product-class-id`,
+`categories_products`.`category_id` AS `category-id`,
+`categories`.`parent_id` AS `category-parent-id`,
+`solr_categories`.`category_ids` AS `category-ids`,
+`solr_categories`.`category_path` AS `category-path`,
+`solr_service_centers`.`service_center_ids` AS `service-center-ids`,
+`products`.`name` AS `name`,
+IFNULL(`products`.`product_name`,`products`.`long_description`) AS `description`,
+`products`.`upc` AS `upc`,
+`manufacturers`.`name` AS `manufacturer-name`,
+`products`.`manufacturer_part_number` AS `manufacturer-part-number`,
+`products`.`summit_part_number` AS `summit-part-number`,
+`product_classes`.`name` AS `product-class`,
+`categories`.`name` AS `category-name`,
+`products`.`matnr` AS `matnr`,
+`external_files`.`url` AS `image-url`,
+(`ss`.`eod_qty` > 0) AS `service-center-count`
+FROM `products`
+LEFT JOIN `external_files`
+  ON (`products`.`id` = `external_files`.`product_id`)
+LEFT JOIN `categories_products`
+ON (`products`.`id` = `categories_products`.`product_id`)
+LEFT JOIN `solr_categories`
+ON (`categories_products`.`category_id` = `solr_categories`.`category_id`)
+LEFT JOIN `product_classes`
+ON (`products`.`product_class_id` = `product_classes`.`id`)
+LEFT JOIN `solr_service_centers`
+ON (`products`.`id` = `solr_service_centers`.`product_id`)
+LEFT JOIN `manufacturers`
+ON (`products`.`manufacturer_id` = `manufacturers`.`id`)
+LEFT JOIN `categories`
+ON (`categories`.`id` = `categories_products`.`category_id`)
+LEFT JOIN
+(
+ SELECT `category_hierarchies`.`ancestor_id`
+ FROM `category_hierarchies`
+ GROUP BY 1
+ HAVING MAX(`category_hierarchies`.`generations`) = 0
+ )
+AS `leaves`
+ON (`categories`.`id` = `leaves`.`ancestor_id`)
+INNER JOIN
+(
+ SELECT MAX(`stock_statuses`.`product_id`) as `product_id`, SUM(`stock_statuses`.`eod_qty`) as `eod_qty`
+ FROM `stock_statuses`
+ GROUP BY `stock_statuses`.`product_id`
+ )
+AS `ss`
+ON (`products`.`id` = `ss`.`product_id`)
+WHERE `external_files`.`type` = 'image'
+;
+")
+
+(defn clean-product-plus [m]
+  (cond-> m
+    true clear-empty
+
+    (not-empty (:service-center-ids m))
+    (assoc :service-center-ids
+           (map read-string (split (:service-center-ids m) #",")))
+
+    (not-empty (:category-ids m))
+    (assoc :category-ids
+           (map read-string (split (:category-ids m) #",")))
+
+    (not-empty (:matnr m))
+    (assoc :matnr
+           (->> m :matnr (re-find #"0*(\d+)") last read-string str))
+    ))
+
+(defn products-plus []
+  (map clean-product-plus (j/query @db-map [product-query-sql])))
+
+;; (defn products []
+;;   (j/query @db-map ["select * from products limit 1"]))
+
+;; (defn manufacturers []
+;;   (j/query @db-map ["select * from manufacturers"]))
+
+(defn- get-categories
+  "return jdbc result set"
+  []
+  (let [sql "select c.id, c.parent_id, c.name, solr.category_path
+from categories c
+join solr_categories solr on solr.category_id=c.id"]
+    (j/query @db-map [sql])))
+
+(defn- build-categories
+  "return hash of key=category-id, value={:id :name :parent-id :path}"
+  []
+  (let [result (get-categories)]
+    (into {}
+          (map (fn [c] [(:id c) c]) result))))
+
+(defn- build-manufacturers
+  "return hash of key=category-id, value={:id :name :parent-id :path}"
+  []
+  (let [result (j/query @db-map ["select id, name, image_data 'image-data' from manufacturers"])]
+    (into {}
+          (map (fn [m] [(:id m) m]) result))))
+
+(defn- categories
+  []
+  (when-not @categories-atom
+    (reset! categories-atom (build-categories)))
+  @categories-atom)
+
+(defn- manufacturers
+  []
+  (when-not @manufacturers-atom
+    (reset! manufacturers-atom (build-manufacturers)))
+  @manufacturers-atom)
+
+(defn find-category-by-path
+  "find category for given path"
+  [path]
+  ((categories) (-> (split path #"/") last read-string)))
+
+(defn find-category [id]
+  ((categories) id))
+
+(defn find-manufacturer [id]
+  ((manufacturers) id))
+
+;; (find-category 1)
+;; (find-category-by-path "/390/1")
+(find-manufacturer 1)
+
