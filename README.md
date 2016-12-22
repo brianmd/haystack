@@ -10,7 +10,7 @@ Processing a request follows these steps:
 
 Further information on the request and response are below.
 
-![Haystack transforms](docs/haystack.jpg)
+![Haystack transforms](/docs/haystack.jpg)
 
 ## Breaking down the url
 For url: http://localhost:8080/api/v2/search?search=copper%20blue&category-path=/395&num-per-page=25&page-num=1&service-center-id=7&manufacturer-ids=[127,199]&query-entire=false
