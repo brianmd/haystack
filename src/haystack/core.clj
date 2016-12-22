@@ -13,4 +13,4 @@
     (recur))
   )
 
-(println "to run server: (routes/start-server)")
+(println "\n\nto run server: (routes/restart-server)\n\n")

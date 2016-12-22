@@ -107,7 +107,8 @@
     (map #(let [n (- (count %) 12)] (subs % (max 0 n))) upcs)))
 
 (def fields-to-search
-  ["name" "description" "manufacturer-name" "category-name" "product-class" "upc" "manufacturer-part-number" "summit-part-number" "matnr"])
+  ;; ["name" "description" "manufacturer-name" "category-name" "product-class" "upc" "manufacturer-part-number" "summit-part-number" "matnr"])
+  ["name" "description" "category-name" "product-class" "upc" "manufacturer-part-number" "summit-part-number" "matnr"])
 
 (defn- transform-search-query
   "discover must/should/filtered components of query-map"

@@ -54,6 +54,10 @@
      }
     ))
 
+;; (def q {:query {:query_string "copper"}})
+;; (esd/search repo "searchecommerce" "productplus" q)
+;; (:uri repo)
+
 (defn process-search
   [query-map]
   (let [q (query/build-search-query query-map)
