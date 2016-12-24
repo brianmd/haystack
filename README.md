@@ -292,7 +292,8 @@ This section is purely informational. It shows the logical query-maps (main and 
 
 ## Installation
 
-Download from http://example.com/FIXME.
+__Important Note:__ This project uses elastisch, which currently supports
+up to elasticsearch 2.4.3, not the latest version 5.
 
 ## Usage
 
