@@ -11,7 +11,7 @@
 (def index-name "searchecommerce")
 
 (def repo (esr/connect srv
-                       {:cluster.name "ek"
+                       {; :cluster.name "ek"
                         :connection-manager (clj-http.conn-mgr/make-reusable-conn-manager
                                              {:timeout 10})}))
 
