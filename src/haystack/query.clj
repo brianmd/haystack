@@ -48,7 +48,13 @@
 
 (defn categories-at-level
   [cats level]
-  (filter #(slash-count= level (:key %)) cats)
+  (if (= level 0)
+    (let [docs (filter #(slash-count= 1 (:key %)) cats)]
+      (println (str "level 0 cats:" (first docs)))
+      ;; (prn cats)
+      ;; [(assoc (first docs) :name "All Categories" :key "")])
+      [:key 0 :doc-count (:doc-count (first docs))])
+    (filter #(slash-count= level (:key %)) cats))
   )
 
 
@@ -77,7 +83,8 @@
         manuf (-> aggs :manufacturer-id :buckets)
         cat-path (:category-path query-map)
         cat-path-level (inc (slash-count cat-path))
-        cat-ancestors (flatten (map #(categories-at-level cats %) (range 1 cat-path-level)))
+        ;; cat-ancestors (flatten (map #(categories-at-level cats %) (range 0 cat-path-level)))
+        cat-ancestors (if (< 0 cat-path-level) (flatten (map #(categories-at-level cats %) (range 1 cat-path-level))))
         ]
     {:category-path (categories-at-level cats cat-path-level)
      :category-path-ancestors cat-ancestors
@@ -107,8 +114,7 @@
     (map #(let [n (- (count %) 12)] (subs % (max 0 n))) upcs)))
 
 (def fields-to-search
-  ;; ["name" "description" "manufacturer-name" "category-name" "product-class" "upc" "manufacturer-part-number" "summit-part-number" "matnr"])
-  ["name" "description" "category-name" "product-class" "upc" "manufacturer-part-number" "summit-part-number" "matnr"])
+  ["name" "description" "category-name^0.1" "manufacturer-name^0.1" "product-class^0.1" "upc" "manufacturer-part-number" "summit-part-number" "matnr"])
 
 (defn- transform-search-query
   "discover must/should/filtered components of query-map"

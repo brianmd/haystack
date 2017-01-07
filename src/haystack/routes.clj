@@ -35,7 +35,24 @@
   [aggregations]
   (let [cats (:category-path aggregations)
         manuf (:manufacturer-id aggregations)
-        ancestors (:category-path-ancestors aggregations)]
+        ancestors (:category-path-ancestors aggregations)
+        ancestor-paths
+        (map (fn [facet]
+               (let [m (ecommerce/find-category-by-path (:key facet))]
+                 (cond-> facet
+                   m (assoc :name (:name m)))))
+             ancestors)
+        ancestor-paths
+        (if (empty? ancestor-paths)
+          ancestor-paths
+          (let [last-key (:key (last ancestor-paths))
+                dropped-counts (map #(if (= last-key (:key %))
+                                       %
+                                       (dissoc % :doc_count))
+                                    ancestor-paths)
+                ]
+            (concat [{:key "" :name "All Categories"}] dropped-counts)))
+        ]
     {:category-path (map (fn [facet]
                            (let [m (ecommerce/find-category-by-path (:key facet))]
                              (cond-> facet
@@ -45,12 +62,7 @@
                                    (cond-> facet
                                      m (assoc :name (:name m)))))
                            manuf)
-     ;; :category-path-ancestors ancestors
-     :category-path-ancestors (map (fn [facet]
-                                     (let [m (ecommerce/find-category-by-path (:key facet))]
-                                       (cond-> facet
-                                         m (assoc :name (:name m)))))
-                                   ancestors)
+     :category-path-ancestors ancestor-paths
      }
     ))
 
