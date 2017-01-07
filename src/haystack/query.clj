@@ -80,6 +80,7 @@
   [query-map response]
   (let [aggs (:aggregations response)
         cats (-> aggs :category-path :buckets)
+        cats (if cats cats (-> aggs :category-path :filter-cat-path :buckets))
         manuf (-> aggs :manufacturer-id :buckets)
         cat-path (:category-path query-map)
         cat-path-level (inc (slash-count cat-path))
@@ -116,15 +117,16 @@
 (def fields-to-search
   ["name" "description" "category-name^0.1" "manufacturer-name^0.1" "product-class^0.1" "upc" "manufacturer-part-number" "summit-part-number" "matnr"])
 
-(defn- transform-search-query
+(defn transform-search-query
   "discover must/should/filtered components of query-map"
   [{:keys [search service-center-id manufacturer-ids category-path] :as query-map}]
   {:pre [(validate-query-map query-map)]}
   (let [tokens      (when search (split search #"\s+"))
         upcs        (select-upcs tokens)
         category-id (when category-path (-> (split category-path #"/") last))]
-    (cond-> {:filtered [] :must [] :should []}
-      manufacturer-ids  (update-in [:filtered] conj {:terms {:manufacturer-id manufacturer-ids}})
+    (cond-> {:filtered [] :must [] :should [] :post-filter []}
+      ;; manufacturer-ids  (update-in [:post-filter] conj {:terms {:manufacturer-id manufacturer-ids}})
+      manufacturer-ids  (update-in [:post-filter] conj {:terms {:manufacturer-id manufacturer-ids}})
       service-center-id (update-in [:filtered] conj {:term {:service-center-ids service-center-id}})
       category-id       (update-in [:filtered] conj {:term {:category-ids category-id}})
 
@@ -137,14 +139,16 @@
       (not-empty upcs) (update-in [:should] conj {:query {:term {:upc (stringify-seq upcs)}}})
       ;; service-center-count -- boost? filter?
       )))
-;; (transform-search-query query-map)
 
 (defn build-search-query
   "build elasticsearch json query from query-map"
   [query-map]
   (let [q (transform-search-query query-map)
         paging (extract-paging query-map nil)
-        do-aggs (not (:total-hits-only query-map))]
+        do-aggs (not (:total-hits-only query-map))
+        post-filter? (not-empty (:post-filter q))]
+    (if do-aggs
+      (println "\n\npost-filter" (:post-filter q) "\n\n"))
     (cond->
         {:from (* (:num-per-page paging) (dec (:page-num paging)))
          :size (:num-per-page paging)
@@ -161,10 +165,16 @@
           :fields
           {:* {}}}
          }
+      ;; (and do-aggs (not-empty (:post-filter q))) (assoc :post-filter (first (:post_filter q)))
+      post-filter? (assoc :post_filter (first (:post-filter q)))
       do-aggs (assoc :aggregations
-                  {:category-path   {:terms {:field "category-path" :min_doc_count 1 :size 4000}}
-                   :manufacturer-id {:terms {:field "manufacturer-id" :min_doc_count 1 :size 100}}
-                   })
+                     (cond->
+                         {:manufacturer-id {:terms {:field "manufacturer-id" :min_doc_count 1 :size 100}}}
+                       post-filter? (assoc :category-path
+                                           {:filter (first (:post-filter q))
+                                            :aggs {:filter-cat-path {:terms {:field "category-path" :min_doc_count 1 :size 4000}}}})
+                       (not post-filter?) (assoc :category-path {:terms {:field "category-path" :min_doc_count 1 :size 4000}})
+                       ))
       )))
 ;; (build-search-query query-map)
 
