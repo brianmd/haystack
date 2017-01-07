@@ -73,7 +73,7 @@
 (defn process-search
   [query-map]
   (let [q (query/build-search-query query-map)
-        response (esd/search repo "searchecommerce" "productplus" q)
+        response (try (esd/search repo "searchecommerce" "productplus" q) (catch Throwable e {}))
         aggregations (query/extract-aggregations query-map response)
         named-aggregations (merge-aggregation-names aggregations)
         ]
@@ -82,6 +82,9 @@
        :elasticsearch-query q
        }
       {:paging (query/extract-paging query-map response)
+       ;; :response response
+       ;; :transform (query/transform-search-query query-map)
+       ;; :q q
        :search-request query-map
        :documents (query/extract-documents response)
        :aggregations named-aggregations
