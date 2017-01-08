@@ -23,8 +23,8 @@
         ;; snowball {:type "string" :analyzer "snowball" :store true}
         ;; snowball {:type "string" :analyzer "snowball" :index_options "offsets" :store true}
         snowball {:type "string" :analyzer "snowball"}
-        ;; part-num {:type "string" :analyzer "part-num-analyzer"}
-        part-num {:type "string"}
+        part-num {:type "string" :analyzer "part-num-analyzer"}
+        ;; part-num {:type "string"}
         string {:type "string"}
         integer {:type "integer"}
         long {:type "long"}
@@ -39,17 +39,31 @@
         name {:name snowball}
         descript {:description snowball}
         ]
+    (println "should have 1 shard")
     {:settings
      {:number_of_shards 1
-      ;; :number_of_replicas 1
+      :number_of_replicas 1
       :analysis
       {
+       :filter
+       {:scrunch {:type "word_delimiter"
+                  :generate_word_parts "false"
+                  :generate_number_parts "false"
+                  :split_on_numerics "false"
+                  :split_on_case_change "false"
+                  :preserve_original "false"
+                  :catenate_all true}
+        :part-num-ngram {:type "nGram"
+                         :min_gram 5
+                         :max_gram 15}}
+
        :tokenizer
        {:path-tokenizer {:type "path_hierarchy"
                          :delimiter "/"}
         :upc-tokenizer {:type "ngram" :min_gram 11 :max_gram 12}
-        :part-num-tokenizer {:type "ngram" :min_gram 3 :max_gram 8}
+        ;; :part-num-tokenizer {:type "ngram" :min_gram 3 :max_gram 8}
         }
+
        :analyzer
        {:path-analyzer {:type "custom"
                         :tokenizer "path-tokenizer"
@@ -57,7 +71,10 @@
         :upc-analyzer {:type "custom"
                        :tokenizer "upc-tokenizer"}
         :part-num-analyzer {:type "custom"
-                            :tokenizer "part-num-tokenizer"}
+                            :tokenizer "keyword"
+                            ;; :tokenizer "part-num-tokenizer"
+                            :filter ["scrunch"  "lowercase" "part-num-ngram"]}
+                            ;; :filter ["scrunch"  "lowercase"]}
         }}}
 
      :mappings
@@ -69,6 +86,8 @@
                :manufacturer-name snowball
                :product-class snowball
                :matnr {:type "string"}
+               ;; :matnr {:type "string" :tokenizer "keyword"}
+               ;; :matnr long
                ;; :matnr {:type "string" :analyzer "not_analyzed" :search_analyzer "not_analyzed"}
 
                :manufacturer-part-number part-num
@@ -108,10 +127,18 @@
   [repo index-name]
   (println "reloading (delete index, create index, bulk-create documents)")
   (esi/delete repo index-name)
-  (esi/create repo index-name ecommerce-mapping-types)
+  (println "deleted")
+  (try
+    (esi/create repo index-name ecommerce-mapping-types)
+    (catch Throwable e
+      (println "error in index create")
+      (println e)
+      (throw e)))
+  (println "loading data")
   (doall
    (bulk-create repo index-name "productplus"
-                (->> (ecommerce/products-plus) )))
+                (->> (ecommerce/products-plus) ))
+   )
   (println "finished reloading")
   )
 

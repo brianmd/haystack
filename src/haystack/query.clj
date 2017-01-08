@@ -116,6 +116,7 @@
 
 (def fields-to-search
   ["name" "description" "category-name^0.1" "manufacturer-name^0.1" "product-class^0.1" "upc" "manufacturer-part-number" "summit-part-number" "matnr"])
+  ;; ["name" "description" "category-name^0.1" "manufacturer-name^0.1" "product-class^0.1"])
 
 (defn transform-search-query
   "discover must/should/filtered components of query-map"
