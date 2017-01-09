@@ -65,6 +65,7 @@
   (let [source (atom (select-keys
                       (:_source doc)
                       [:bh-product-id :name :description :manufacturer-name :manufacturer-part-number
+                       :manufacturer-id
                        :summit-part-number :upc :category-name :product-class :matnr :image-url]))
         highlight (:highlight doc)]
     (doall
