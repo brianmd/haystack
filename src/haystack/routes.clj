@@ -28,6 +28,26 @@
                      "articles/" {"index.html" :article-index
                                   "article.html" :article}}])
 
+(defn save-feedback
+  [ctx]
+  (let [query-map (-> ctx :parameters :query walk/keywordize-keys)
+        query-map (merge
+                   query-map
+                   {:created-on (java.util.Date.)})]
+    (println "in save-feedback")
+    ;; (println (-> ctx :parameters :query walk/keywordize-keys))
+    (prn query-map)
+    (try
+      (esd/create repo "searchecommerce" "feedback" query-map)
+      (catch Throwable e
+        (println e)
+        (throw e)))
+    (json-response {:saved true})))
+
+(defn get-feedback
+  []
+  (esd/search repo "searchecommerce" "feedback" ""))
+
 (def scheme "http")
 (def host "locahost:8080")
 
@@ -182,7 +202,7 @@
                          {:response (fn [ctx]
                                       (println "in mappings")
                                       (esi/get-mapping repo "searchecommerce"))}}})
-         "my-mappings" (yada/resource
+        "my-mappings" (yada/resource
                  {:id :sql
                   :description "Explicitly defined mappings"
                   :produces    {:media-type "application/json"}
@@ -218,6 +238,18 @@
         {"dump"   (fn [req]
                     {:status 200
                      :body   "<html><body>api/v2/</body></html>"})
+         "feedback" (yada/resource
+                     {:id :feedback
+                      :description "Post feedback"
+                      :access-control {:allow-origin "*"
+                                       :allow-methods #{:get :post}
+                                       :allow-credentials false
+                                       :expose-headers #{"X-Custom"}}
+                      :consumes    {:media-type #{"application/json" "application/transit" "application/transmit+json"}}
+                      :produces    {:media-type "application/json"}
+                      :methods
+                      {:get
+                       {:response (fn [ctx] (save-feedback ctx))}}})
          "search" (yada/resource
                    {:id          :homepage
                     :description "Process search request"
