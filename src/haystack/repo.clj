@@ -10,6 +10,8 @@
 
 (def index-name "searchecommerce")
 
+;; two types: productplus and feedback
+
 (def repo (esr/connect srv
                        {; :cluster.name "ek"
                         :connection-manager (clj-http.conn-mgr/make-reusable-conn-manager

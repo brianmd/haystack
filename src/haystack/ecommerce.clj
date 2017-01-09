@@ -18,32 +18,17 @@
                    :user (or (System/getenv "DB_USER") "user")
                    :password (or (System/getenv "DB_PW") "pw")}))
 
-(def product-query-sql
+
+
+
+;; (j/query @db-map [product-query-count-sql])
+
+(def product-query-count-sql
 "SELECT
-now() AS 'updated-at',
-'product' AS `_type`,
-`products`.`id` AS `bh-product-id`,
-`products`.`manufacturer_id` AS `manufacturer-id`,
-`products`.`product_class_id` AS `product-class-id`,
-`categories_products`.`category_id` AS `category-id`,
-`categories`.`parent_id` AS `category-parent-id`,
-`solr_categories`.`category_ids` AS `category-ids`,
-`solr_categories`.`category_path` AS `category-path`,
-`solr_service_centers`.`service_center_ids` AS `service-center-ids`,
-`products`.`name` AS `name`,
-IFNULL(`products`.`product_name`,`products`.`long_description`) AS `description`,
-`products`.`upc` AS `upc`,
-`manufacturers`.`name` AS `manufacturer-name`,
-`products`.`manufacturer_part_number` AS `manufacturer-part-number`,
-`products`.`summit_part_number` AS `summit-part-number`,
-`product_classes`.`name` AS `product-class`,
-`categories`.`name` AS `category-name`,
-`products`.`matnr` AS `matnr`,
-`external_files`.`url` AS `image-url`,
-(`ss`.`eod_qty` > 0) AS `service-center-count`
+count(distinct products.id)
 FROM `products`
 LEFT JOIN `external_files`
-  ON (`products`.`id` = `external_files`.`product_id`)
+  ON (`products`.`id` = `external_files`.`product_id` and `external_files`.`type` = 'image')
 LEFT JOIN `categories_products`
 ON (`products`.`id` = `categories_products`.`product_id`)
 LEFT JOIN `solr_categories`
@@ -73,7 +58,69 @@ INNER JOIN
  )
 AS `ss`
 ON (`products`.`id` = `ss`.`product_id`)
-WHERE `external_files`.`type` = 'image'
+;
+")
+
+  ;; WHERE `external_files`.`type` = 'image'
+
+
+
+
+(def product-query-sql
+"SELECT
+now() AS 'updated-at',
+'product' AS `_type`,
+`products`.`id` AS `bh-product-id`,
+`products`.`manufacturer_id` AS `manufacturer-id`,
+`products`.`product_class_id` AS `product-class-id`,
+`categories_products`.`category_id` AS `category-id`,
+`categories`.`parent_id` AS `category-parent-id`,
+`solr_categories`.`category_ids` AS `category-ids`,
+`solr_categories`.`category_path` AS `category-path`,
+`solr_service_centers`.`service_center_ids` AS `service-center-ids`,
+`products`.`name` AS `name`,
+IFNULL(`products`.`product_name`,`products`.`long_description`) AS `description`,
+`products`.`upc` AS `upc`,
+`manufacturers`.`name` AS `manufacturer-name`,
+`products`.`manufacturer_part_number` AS `manufacturer-part-number`,
+`products`.`summit_part_number` AS `summit-part-number`,
+`product_classes`.`name` AS `product-class`,
+`categories`.`name` AS `category-name`,
+`products`.`matnr` AS `matnr`,
+`external_files`.`url` AS `image-url`,
+(`ss`.`eod_qty` > 0) AS `service-center-count`
+FROM `products`
+LEFT JOIN `external_files`
+  ON (`products`.`id` = `external_files`.`product_id` and `external_files`.`type` = 'image')
+LEFT JOIN `categories_products`
+ON (`products`.`id` = `categories_products`.`product_id`)
+LEFT JOIN `solr_categories`
+ON (`categories_products`.`category_id` = `solr_categories`.`category_id`)
+LEFT JOIN `product_classes`
+ON (`products`.`product_class_id` = `product_classes`.`id`)
+LEFT JOIN `solr_service_centers`
+ON (`products`.`id` = `solr_service_centers`.`product_id`)
+LEFT JOIN `manufacturers`
+ON (`products`.`manufacturer_id` = `manufacturers`.`id`)
+LEFT JOIN `categories`
+ON (`categories`.`id` = `categories_products`.`category_id`)
+LEFT JOIN
+(
+ SELECT `category_hierarchies`.`ancestor_id`
+ FROM `category_hierarchies`
+ GROUP BY 1
+ HAVING MAX(`category_hierarchies`.`generations`) = 0
+ )
+AS `leaves`
+ON (`categories`.`id` = `leaves`.`ancestor_id`)
+INNER JOIN
+(
+ SELECT MAX(`stock_statuses`.`product_id`) as `product_id`, SUM(`stock_statuses`.`eod_qty`) as `eod_qty`
+ FROM `stock_statuses`
+ GROUP BY `stock_statuses`.`product_id`
+ )
+AS `ss`
+ON (`products`.`id` = `ss`.`product_id`)
 ;
 ")
 
