@@ -34,11 +34,11 @@
         query-map (merge
                    query-map
                    {:created-on (java.util.Date.)})]
-    (println "in save-feedback")
+    ;; (println "in save-feedback")
     ;; (println (-> ctx :parameters :query walk/keywordize-keys))
     (prn query-map)
     (try
-      (esd/create repo "searchecommerce" "feedback" query-map)
+      (esd/create repo "feedback" "feedback" query-map)
       (catch Throwable e
         (println e)
         (throw e)))

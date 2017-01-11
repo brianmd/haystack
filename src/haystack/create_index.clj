@@ -13,6 +13,7 @@
 
              [haystack.ecommerce :as ecommerce]
              [haystack.query :as query]
+             [haystack.feedback :as feedback]
              ;; [com.murphydye/mishmash :as mm]
              ;; [summit.utils.core :refer :all]
              ;; [summit.db.relationships :as db]
@@ -54,7 +55,7 @@
                   :preserve_original "false"
                   :catenate_all true}
         :part-num-ngram {:type "nGram"
-                         :min_gram 3
+                         :min_gram 4
                          :max_gram 15}}
 
        :tokenizer
@@ -125,6 +126,8 @@
 
 (defn reload
   [repo index-name]
+  (println "creating feedback index")
+  (feedback/create-index)
   (println "reloading (delete index, create index, bulk-create documents)")
   (esi/delete repo index-name)
   (println "deleted")
