@@ -65,6 +65,13 @@
 
 ;; ------------------------------------------------ extract info
 
+(defn- build-highlight
+  [v]
+  (let [highlight (join "" v)]
+    (if (re-find #"search-term" highlight)
+      highlight
+      (str "<span class=\"search-term\">" highlight "</span>"))))
+
 (defn build-document
   [doc]
   (let [source (atom (select-keys
@@ -75,7 +82,7 @@
         highlight (:highlight doc)]
     (doall
      ;; (map (fn [[k v]] (swap! source assoc k (join " .... " v))) highlight))
-     (map (fn [[k v]] (swap! source assoc k (join "" v))) highlight))
+     (map (fn [[k v]] (swap! source assoc k (build-highlight v))) highlight))
     (rename-keys @source {:bh-product-id :id})))
 
 (defn extract-documents
