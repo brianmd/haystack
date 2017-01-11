@@ -4,6 +4,7 @@
             [clojure.set :refer [rename-keys]]
 
             [clojurewerkz.elastisch.rest.index :as esi]
+            [clojurewerkz.elastisch.rest.document :as esd]
 
             [haystack.repo :as r]
             ;; [clj-http.client :as client]
@@ -25,5 +26,5 @@
 
 (defn get-feedback
   []
-  (esd/search repo "searchecommerce" "feedback" ""))
+  (esd/search r/repo "searchecommerce" "feedback" ""))
 
