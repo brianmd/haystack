@@ -54,7 +54,7 @@
                   :preserve_original "false"
                   :catenate_all true}
         :part-num-ngram {:type "nGram"
-                         :min_gram 5
+                         :min_gram 3
                          :max_gram 15}}
 
        :tokenizer

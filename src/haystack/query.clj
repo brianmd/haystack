@@ -7,6 +7,11 @@
             [bidi.bidi :as bidi]
             ))
 
+(defn fprintln
+  "println and then flush"
+  [& args]
+  (.write *out* (str (clojure.string/join " " args) "\n")))
+
 (def ^:private search-keys #{:search :service-center-id :manufacturer-ids :category-path})
 
 ;; ----------------------------  utility functions
@@ -50,7 +55,7 @@
   [cats level]
   (if (= level 0)
     (let [docs (filter #(slash-count= 1 (:key %)) cats)]
-      (println (str "level 0 cats:" (first docs)))
+      (fprintln (str "level 0 cats:" (first docs)))
       ;; (prn cats)
       ;; [(assoc (first docs) :name "All Categories" :key "")])
       [:key 0 :doc-count (:doc-count (first docs))])
@@ -121,6 +126,21 @@
   ["name" "description" "category-name^0.1" "manufacturer-name^0.1" "product-class^0.1"])
   ;; ["name" "description" "category-name^0.1" "manufacturer-name^0.1" "product-class^0.1"])
 
+(defn build-filter
+  "discover must/should/filtered components of query-map"
+  [{:keys [service-center-id manufacturer-ids category-path] :as query-map}]
+  {:pre [(validate-query-map query-map)]}
+  (let [
+        category-id (when category-path (-> (split category-path #"/") last))]
+    (cond-> {:filtered [] :must [] :should [] :post-filter []}
+      ;; manufacturer-ids  (update-in [:post-filter] conj {:terms {:manufacturer-id manufacturer-ids}})
+      manufacturer-ids  (update-in [:post-filter] conj {:terms {:manufacturer-id manufacturer-ids}})
+      service-center-id (update-in [:filtered] conj {:term {:service-center-ids service-center-id}})
+      category-id       (update-in [:filtered] conj {:term {:category-ids category-id}})
+
+      ;; service-center-count -- boost? filter?
+      )))
+
 (defn transform-search-query
   "discover must/should/filtered components of query-map"
   [{:keys [search service-center-id manufacturer-ids category-path] :as query-map}]
@@ -140,29 +160,83 @@
                                                  :operator "and"
                                                  ;; :minimum_should_match "75%"
                                                  :fields   fields-to-search}})
-      (not-empty upcs) (update-in [:should] conj {:query {:term {:upc (stringify-seq upcs)}}})
+      ;; (not-empty upcs) (update-in [:should] conj {:query {:term {:upc (stringify-seq upcs)}}})
       ;; service-center-count -- boost? filter?
       )))
 
-(defn build-search-query
-  "build elasticsearch json query from query-map"
+(defn build-search-word-query
+  "build general word search (not upc/matnr/part#s) elasticsearch json query from query-map"
   [query-map]
   (let [q (transform-search-query query-map)
-        paging (extract-paging query-map nil)
-        do-aggs (not (:total-hits-only query-map))
+        ;; paging (extract-paging query-map nil)
+        ;; do-aggs (not (:total-hits-only query-map))
         post-filter? (not-empty (:post-filter q))]
-    (if do-aggs
-      (println "\n\npost-filter" (:post-filter q) "\n\n"))
-    (cond->
-        {:from (* (:num-per-page paging) (dec (:page-num paging)))
-         :size (:num-per-page paging)
-         :query
+    ;; (if do-aggs
+    ;;   (fprintln "\n\npost-filter" (:post-filter q) "\n\n"))
+    ;; (cond->
+    ;;     {
+         ;; :from (* (:num-per-page paging) (dec (:page-num paging)))
+         ;; :size (:num-per-page paging)
+         ;; :query
          {:bool
           (cond-> {}
             (not-empty (:filtered q)) (assoc :filter (:filtered q))
             (not-empty (:should q)) (assoc :should (:should q))
             (not-empty (:must q)) (assoc :must   (:must q)))
           }
+         ;; :highlight
+         ;; {:pre_tags ["<span class=\"search-term\">"]
+         ;;  :post_tags ["</span>"]
+         ;;  :fragment_size 500
+         ;;  :fields
+         ;;  {:* {}}}
+         ;; }
+      ;; (and do-aggs (not-empty (:post-filter q))) (assoc :post-filter (first (:post_filter q)))
+      ;; post-filter? (assoc :post_filter (first (:post-filter q)))
+      ;; do-aggs (assoc :aggregations
+      ;;                (cond->
+      ;;                    {:manufacturer-id {:terms {:field "manufacturer-id" :min_doc_count 1 :size 100}}}
+      ;;                  post-filter? (assoc :category-path
+      ;;                                      {:filter (first (:post-filter q))
+      ;;                                       :aggs {:filter-cat-path {:terms {:field "category-path" :min_doc_count 1 :size 4000}}}})
+      ;;                  (not post-filter?) (assoc :category-path {:terms {:field "category-path" :min_doc_count 1 :size 4000}})
+      ;;                  ))
+      ))
+;; (build-search-query query-map)
+
+(defn build-search-query
+  "build elasticsearch json query from query-map"
+  [query-map]
+  (fprintln "\n\nin new build.")
+  (let [
+        search-text (:search query-map)
+        ;; search-words (split search-text)
+        paging (extract-paging query-map nil)
+        do-aggs? (not (:total-hits-only query-map))
+        general-word-query (build-search-word-query query-map)
+        manufacturer-ids (:manufacturer-ids query-map)
+        post-filter (if manufacturer-ids {:terms {:manufacturer-id manufacturer-ids}})
+        filters (build-filter query-map)
+        ]
+    (fprintln "general word-search" general-word-query)
+    ;; (fprintln "words" search-words)
+    (cond->
+        {
+         :query
+         {:bool
+          ;; (not-empty (:filtered q)) (assoc :filter (:filtered q))
+          {
+           :filter (:filtered filters)
+           :should [general-word-query
+                    {:match {:upc search-text}}
+                    {:match {:matnr search-text}}
+                    {:match {:summit-part-number search-text}}
+                    {:match {:manufacturer-part-number search-text}}
+                    ]
+           :minimum_should_match 1}
+          }
+         :from (* (:num-per-page paging) (dec (:page-num paging)))
+         :size (:num-per-page paging)
          :highlight
          {:pre_tags ["<span class=\"search-term\">"]
           :post_tags ["</span>"]
@@ -170,19 +244,19 @@
           :fields
           {:* {}}}
          }
-      ;; (and do-aggs (not-empty (:post-filter q))) (assoc :post-filter (first (:post_filter q)))
-      post-filter? (assoc :post_filter (first (:post-filter q)))
-      do-aggs (assoc :aggregations
-                     (cond->
-                         {:manufacturer-id {:terms {:field "manufacturer-id" :min_doc_count 1 :size 100}}}
-                       post-filter? (assoc :category-path
-                                           {:filter (first (:post-filter q))
-                                            :aggs {:filter-cat-path {:terms {:field "category-path" :min_doc_count 1 :size 4000}}}})
-                       (not post-filter?) (assoc :category-path {:terms {:field "category-path" :min_doc_count 1 :size 4000}})
-                       ))
-      )))
-;; (build-search-query query-map)
-
+    ;; do aggregations only on primary search.
+      post-filter (assoc :post_filter post-filter)
+      do-aggs? (assoc :aggregations
+                    (cond->
+                        {:manufacturer-id {:terms {:field "manufacturer-id" :min_doc_count 1 :size 100}}}
+                      post-filter (assoc :category-path
+                                         {:filter post-filter
+                                          :aggs {:filter-cat-path {:terms {:field "category-path" :min_doc_count 1 :size 4000}}}})
+                      (nil? post-filter) (assoc :category-path {:terms {:field "category-path" :min_doc_count 1 :size 4000}})
+                      ))
+     )
+    )
+  )
 
 
 ;; TODO: currently blue-harvest accepts only one manufacturer
