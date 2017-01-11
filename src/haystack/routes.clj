@@ -44,10 +44,6 @@
         (throw e)))
     (json-response {:saved true})))
 
-(defn get-feedback
-  []
-  (esd/search repo "searchecommerce" "feedback" ""))
-
 (def scheme "http")
 (def host "locahost:8080")
 
