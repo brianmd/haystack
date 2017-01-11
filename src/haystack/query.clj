@@ -69,7 +69,8 @@
                        :summit-part-number :upc :category-name :product-class :matnr :image-url]))
         highlight (:highlight doc)]
     (doall
-     (map (fn [[k v]] (swap! source assoc k (first v))) highlight))
+     ;; (map (fn [[k v]] (swap! source assoc k (join " .... " v))) highlight))
+     (map (fn [[k v]] (swap! source assoc k (join "" v))) highlight))
     (rename-keys @source {:bh-product-id :id})))
 
 (defn extract-documents
@@ -116,7 +117,8 @@
     (map #(let [n (- (count %) 12)] (subs % (max 0 n))) upcs)))
 
 (def fields-to-search
-  ["name" "description" "category-name^0.1" "manufacturer-name^0.1" "product-class^0.1" "upc" "manufacturer-part-number" "summit-part-number" "matnr"])
+  ;; ["name" "description" "category-name^0.1" "manufacturer-name^0.1" "product-class^0.1" "upc" "manufacturer-part-number" "summit-part-number" "matnr"])
+  ["name" "description" "category-name^0.1" "manufacturer-name^0.1" "product-class^0.1"])
   ;; ["name" "description" "category-name^0.1" "manufacturer-name^0.1" "product-class^0.1"])
 
 (defn transform-search-query
@@ -164,6 +166,7 @@
          :highlight
          {:pre_tags ["<span class=\"search-term\">"]
           :post_tags ["</span>"]
+          :fragment_size 500
           :fields
           {:* {}}}
          }

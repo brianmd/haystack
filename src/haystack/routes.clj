@@ -102,13 +102,13 @@
        :elasticsearch-query q
        }
       {:paging (query/extract-paging query-map response)
-       ;; :response response
        ;; :transform (query/transform-search-query query-map)
        ;; :q q
        :search-request query-map
        :documents (query/extract-documents response)
        :aggregations named-aggregations
        :elasticsearch-query q
+       :response response
        })))
 
 (defn search
