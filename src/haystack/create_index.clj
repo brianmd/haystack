@@ -19,6 +19,11 @@
              ;; [summit.db.relationships :as db]
              ))
 
+(def scrunch-characters
+  "[,; /<>?:'\"+=`~_|!@#$%^&*\\(\\)\\[\\]\\{\\}\\\\-]+"
+  ;; "[,; /<>?:'\"+=`~_!@#$%^&*\\(\\)-]+"
+  )
+
 (def ecommerce-mapping-types
   (let [;; analyzers
         ;; snowball {:type "string" :analyzer "snowball" :store true}
@@ -46,6 +51,11 @@
       :number_of_replicas 1
       :analysis
       {
+       :char_filter
+       {:scrunch-chars {:type "pattern_replace"
+                        :pattern scrunch-characters
+                        :replacement ""}}
+
        :filter
        {:scrunch {:type "word_delimiter"
                   :generate_word_parts "false"
@@ -62,6 +72,9 @@
        {:path-tokenizer {:type "path_hierarchy"
                          :delimiter "/"}
         :upc-tokenizer {:type "ngram" :min_gram 11 :max_gram 12}
+        :scrunch-tokenizer {:type "nGram"
+                            :min_gram "4"
+                            :max_gram "15"}
         ;; :part-num-tokenizer {:type "ngram" :min_gram 3 :max_gram 8}
         }
 
@@ -71,7 +84,11 @@
                         :filter "lowercase"}
         :upc-analyzer {:type "custom"
                        :tokenizer "upc-tokenizer"}
-        :part-num-analyzer {:type "custom"
+        :part-num-analyzer {:tokenizer "scrunch-tokenizer"
+                            :char_filter "scrunch-chars"
+                            :token_chars ["letter" "digit" "whitespce" "punctuation" "symbol"]
+            :filter "lowercase"}
+        :part-num-analyzer-orig {:type "custom"
                             :tokenizer "keyword"
                             ;; :tokenizer "part-num-tokenizer"
                             :filter ["scrunch"  "lowercase" "part-num-ngram"]}
@@ -107,6 +124,14 @@
                :manufacturer-id ignore-int
                })}}
        }))
+
+(do
+  (esi/delete haystack.repo/repo "testing")
+  (esi/create haystack.repo/repo "testing" ecommerce-mapping-types)
+  ;; curl '192.168.0.220:9201/testing/_analyze?pretty=1&analyzer=part-num-analyzer' -d 'FC;(!- %^/&>a@<,:#''}{`_~][+|="$\?,c]'})
+  ;;   => should return only one ngram
+  )
+
 
 (defn bulk-create-all
   "adds all docs in one shot"

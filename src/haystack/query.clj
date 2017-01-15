@@ -166,7 +166,9 @@
                                                  :type     "cross_fields"
                                                  :operator "and"
                                                  ;; :minimum_should_match "75%"
-                                                 :fields   fields-to-search}})
+                                                 :fields   fields-to-search
+                                                 ;; :boost 50
+                                                 }})
       ;; (not-empty upcs) (update-in [:should] conj {:query {:term {:upc (stringify-seq upcs)}}})
       ;; service-center-count -- boost? filter?
       )))
@@ -235,10 +237,10 @@
           {
            :filter (:filtered filters)
            :should [general-word-query
-                    {:match {:upc {:query search-text :boost 5}}}
-                    {:match {:matnr {:query search-text :boost 5}}}
-                    {:match {:summit-part-number search-text}}
-                    {:match {:manufacturer-part-number search-text}}
+                    {:match {:upc {:query search-text :boost 10}}}
+                    {:match {:matnr {:query search-text :boost 10}}}
+                    {:match {:summit-part-number {:query search-text :boost 0.01}}}
+                    {:match {:manufacturer-part-number {:query search-text :boost 0.01}}}
                     ]
            :minimum_should_match 1}
           }
