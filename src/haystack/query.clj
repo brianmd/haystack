@@ -235,8 +235,8 @@
           {
            :filter (:filtered filters)
            :should [general-word-query
-                    {:match {:upc search-text}}
-                    {:match {:matnr search-text}}
+                    {:match {:upc {:query search-text :boost 5}}}
+                    {:match {:matnr {:query search-text :boost 5}}}
                     {:match {:summit-part-number search-text}}
                     {:match {:manufacturer-part-number search-text}}
                     ]
