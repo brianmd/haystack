@@ -38,7 +38,7 @@
         syns (map (fn [[main & others]] (map #(string/join #"," [main %]) others)) groups)]
     (flatten syns)))
 
-(synonyms)
+;; (synonyms)
 
 (def ecommerce-mapping-types
   (let [;; analyzers
