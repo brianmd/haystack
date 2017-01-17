@@ -38,7 +38,7 @@
         syns (map (fn [[main & others]] (map #(string/join #"," [main %]) others)) groups)]
     (flatten syns)))
 
-;; (synonyms)
+(synonyms)
 
 (def ecommerce-mapping-types
   (let [;; analyzers
@@ -87,7 +87,11 @@
         :snowball-filter {:type "snowball"
                           :language "English"}
         :synonym-filter {:type "synonym"
-                         :synonyms (synonyms)}
+                         :synonyms
+                         ;; ["romex,nm"]
+                         ["romex,nm" "so,seoow" "so,seow" "so,soow" "so,sow" "pipe,conduit" "gfi,gfci" "bx,mc"]
+                         ;;(synonyms)
+                         }
         }
 
        :tokenizer
