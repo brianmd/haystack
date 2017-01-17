@@ -10,6 +10,7 @@
              [clojurewerkz.elastisch.common.bulk   :as bulk]
              [clojure.set :as set]
              [clojure.pprint :as pp]
+             [clojure.string :as string]
 
              [haystack.ecommerce :as ecommerce]
              [haystack.query :as query]
@@ -23,6 +24,21 @@
   "[,; /<>?:'\"+=`~_|!@#$%^&*\\(\\)\\[\\]\\{\\}\\\\-]+"
   ;; "[,; /<>?:'\"+=`~_!@#$%^&*\\(\\)-]+"
   )
+
+(def synonym-list
+  ["romex nm"
+   "so seoow seow soow sow"
+   "pipe conduit"
+   "gfi gfci"
+   "bx mc"])
+
+(defn synonyms
+  []
+  (let [groups (map #(string/split % #" ") synonym-list)
+        syns (map (fn [[main & others]] (map #(string/join #"," [main %]) others)) groups)]
+    (flatten syns)))
+
+;; (synonyms)
 
 (def ecommerce-mapping-types
   (let [;; analyzers
