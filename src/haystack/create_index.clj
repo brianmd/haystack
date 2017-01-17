@@ -87,8 +87,7 @@
         :snowball-filter {:type "snowball"
                           :language "English"}
         :synonym-filter {:type "synonym"
-                         :synonyms ["romex,nm"
-                                    ]}
+                         :synonyms (synonyms)}
         }
 
        :tokenizer
