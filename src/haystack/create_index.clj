@@ -151,12 +151,12 @@
                })}}
        }))
 
-(do
-  (esi/delete haystack.repo/repo "testing")
-  (esi/create haystack.repo/repo "testing" ecommerce-mapping-types)
-  ;; curl '192.168.0.220:9201/testing/_analyze?pretty=1&analyzer=part-num-analyzer' -d 'FC;(!- %^/&>a@<,:#''}{`_~][+|="$\?,c]'})
-  ;;   => should return only one ngram
-  )
+;; (do
+;;   (esi/delete haystack.repo/repo "testing")
+;;   (esi/create haystack.repo/repo "testing" ecommerce-mapping-types)
+;;   ;; curl '192.168.0.220:9201/testing/_analyze?pretty=1&analyzer=part-num-analyzer' -d 'FC;(!- %^/&>a@<,:#''}{`_~][+|="$\?,c]'})
+;;   ;;   => should return only one ngram
+;;   )
 
 
 (defn bulk-create-all
