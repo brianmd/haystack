@@ -65,6 +65,10 @@ manufacturer aggregations
 
 "
 
+(defn search
+  [search-text]
+  )
+
 ;; (deftest build-query
 ;;   (let [elasticsearch-query (sut/build-search-query q)]
 ;;     (is (= (:query elasticsearch-query)
@@ -75,3 +79,12 @@ manufacturer aggregations
 ;;   (is (=
 ;;        (sut/select-upcs ["abc" "1234567890" "12345678901" "123456789012" "1234567890333" "12345678904444" "123456789055555"])
 ;;        ["12345678901" "123456789012" "234567890333" "345678904444"])))
+
+
+(deftest upcs-test
+  (let [upcs #{847656070052 018997522658}
+        results (search {:search (string/join upcs)})
+        docs (:documents results)]
+    (count docs))
+  )
+(search "2742548 2598468")

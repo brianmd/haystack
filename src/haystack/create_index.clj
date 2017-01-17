@@ -44,7 +44,8 @@
   (let [;; analyzers
         ;; snowball {:type "string" :analyzer "snowball" :store true}
         ;; snowball {:type "string" :analyzer "snowball" :index_options "offsets" :store true}
-        snowball {:type "string" :analyzer "snowball"}
+        ;; snowball {:type "string" :analyzer "snowball"}
+        snowball {:type "string" :analyzer "synonym-snowball"}
         part-num {:type "string" :analyzer "part-num-analyzer"}
         ;; part-num {:type "string"}
         string {:type "string"}
@@ -82,7 +83,13 @@
                   :catenate_all true}
         :part-num-ngram {:type "nGram"
                          :min_gram 4
-                         :max_gram 15}}
+                         :max_gram 15}
+        :snowball-filter {:type "snowball"
+                          :language "English"}
+        :synonym-filter {:type "synonym"
+                         :synonyms ["romex,nm"
+                                    ]}
+        }
 
        :tokenizer
        {:path-tokenizer {:type "path_hierarchy"
@@ -109,6 +116,9 @@
                             ;; :tokenizer "part-num-tokenizer"
                             :filter ["scrunch"  "lowercase" "part-num-ngram"]}
                             ;; :filter ["scrunch"  "lowercase"]}
+        :synonym-snowball {:type "custom"
+                           :tokenizer "standard"
+                           :filter ["standard" "lowercase" "snowball-filter" "synonym-filter"]}
         }}}
 
      :mappings
