@@ -7,6 +7,8 @@
                  [clj-http "3.4.1"]
                  [clojurewerkz/elastisch "3.0.0-beta1"]
 
+                 [org.clojure/data.csv "0.1.3"]
+
                  [bidi "2.0.14"]
                  [aleph "0.4.1"]
                  [yada "1.1.46"]

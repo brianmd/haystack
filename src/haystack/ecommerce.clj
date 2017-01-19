@@ -1,6 +1,7 @@
 (ns haystack.ecommerce
   (:require [clojure.java.jdbc :as j]
             [clojure.string :refer [split]]
+            [clojure.data.csv :as csv]
             ))
 
 (def ^:private categories-atom (atom nil))
@@ -18,10 +19,29 @@
                    :user (or (System/getenv "DB_USER") "user")
                    :password (or (System/getenv "DB_PW") "pw")}))
 
+(defn as-matnr
+  [s]
+  (let [s (str s)
+        zeroed (str "000000000000000000" s)]
+    (subs zeroed (count s))))
+
+(defn write-step
+  [data]
+  (let [matnr (as-matnr (first data))
+        title (nth data 2)]
+    (j/update! @db-map :products {:step_title title} ["matnr = ?" matnr])
+    ))
+;; (write-step ["000000000000001425" :old-title "new title"])
+;; (j/query @db-map "select * from products where matnr='000000000000001425'")
+
+(defn process-step-file
+  [f]
+  (with-open [in (clojure.java.io/reader "/home/bmd/Downloads/step-titles.csv")]
+    (doall
+     (map f (csv/read-csv in)))))
+;; (process-step-file write-step)
 
 
-
-;; (j/query @db-map [product-query-count-sql])
 
 (def product-query-count-sql
 "SELECT
@@ -78,8 +98,8 @@ now() AS 'updated-at',
 `solr_categories`.`category_ids` AS `category-ids`,
 `solr_categories`.`category_path` AS `category-path`,
 `solr_service_centers`.`service_center_ids` AS `service-center-ids`,
-`products`.`name` AS `name`,
-IFNULL(`products`.`product_name`,`products`.`long_description`) AS `description`,
+IFNULL(`products`.`step_title`,`products`.`name`) AS `name`,
+IFNULL(`products`.`step_description`,`products`.`long_description`) AS `description`,
 `products`.`upc` AS `upc`,
 `manufacturers`.`name` AS `manufacturer-name`,
 `products`.`manufacturer_part_number` AS `manufacturer-part-number`,
@@ -197,5 +217,5 @@ join solr_categories solr on solr.category_id=c.id"]
 
 ;; (find-category 1)
 ;; (find-category-by-path "/390/1")
-(find-manufacturer 1)
+;; (find-manufacturer 1)
 
