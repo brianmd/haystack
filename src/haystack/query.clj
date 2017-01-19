@@ -5,7 +5,8 @@
 
             [clj-http.client :as client]
             [bidi.bidi :as bidi]
-            ))
+
+            [clojure.string :as string]))
 
 (defn fprintln
   "println and then flush"
@@ -90,6 +91,16 @@
   (let [docs (-> response :hits :hits)]
     (map build-document docs)))
 
+(defn build-zero-ancestor
+  [path]
+  (if-let [ids (drop 1 (string/split path #"/"))]
+    (let [path-history (atom [])]
+      (map (fn [x]
+             (swap! path-history conj x)
+             {:key (str "/" (string/join "/" @path-history)) :doc_count 0})
+           ids))))
+;; (build-zero-ancestor "/a/bc/d")
+
 (defn extract-aggregations
   [query-map response]
   (let [aggs (:aggregations response)
@@ -99,8 +110,15 @@
         cat-path (:category-path query-map)
         cat-path-level (inc (slash-count cat-path))
         ;; cat-ancestors (flatten (map #(categories-at-level cats %) (range 0 cat-path-level)))
-        cat-ancestors (if (< 0 cat-path-level) (flatten (map #(categories-at-level cats %) (range 1 cat-path-level))))
+        cat-ancestors (if (< 0 cat-path-level)
+                        (if-let [ancestors (flatten (map #(categories-at-level cats %) (range 1 cat-path-level)))]
+                          (if (empty? ancestors)
+                            (build-zero-ancestor cat-path)
+                            ancestors
+                            )))
         ]
+    ;; (fprintln "cat:" cat-path-level (vec cat-ancestors))
+    ;; (fprintln "query-map" query-map)
     {:category-path (categories-at-level cats cat-path-level)
      :category-path-ancestors cat-ancestors
      :manufacturer-id manuf}))
