@@ -227,7 +227,7 @@
         post-filter (if manufacturer-ids {:terms {:manufacturer-id manufacturer-ids}})
         filters (build-filter query-map)
         ]
-    (fprintln "general word-search" general-word-query)
+    ;; (fprintln "general word-search" general-word-query)
     ;; (fprintln "words" search-words)
     (cond->
         {

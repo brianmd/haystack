@@ -12,6 +12,7 @@
             [haystack.repo :refer [repo]]
             [haystack.query :as query]
             [haystack.search :as search]
+            [haystack.feedback :as feedback]
             [haystack.create-index :as create-index]
 
             [haystack.ecommerce :as ecommerce]
@@ -29,22 +30,6 @@
 (def my-routes ["/" {"index.html" :index
                      "articles/" {"index.html" :article-index
                                   "article.html" :article}}])
-
-(defn save-feedback
-  [ctx]
-  (let [query-map (-> ctx :parameters :query walk/keywordize-keys)
-        query-map (merge
-                   query-map
-                   {:created-on (java.util.Date.)})]
-    ;; (println "in save-feedback")
-    ;; (println (-> ctx :parameters :query walk/keywordize-keys))
-    (prn query-map)
-    (try
-      (esd/create repo "feedback" "feedback" query-map)
-      (catch Throwable e
-        (println e)
-        (throw e)))
-    (json-response {:saved true})))
 
 (def scheme "http")
 (def host "locahost:8080")
@@ -145,7 +130,10 @@
                       :produces    {:media-type "application/json"}
                       :methods
                       {:get
-                       {:response (fn [ctx] (save-feedback ctx))}}})
+                       {:response (fn [ctx] (let [result (feedback/save-feedback
+                                                          (-> ctx :parameters :query walk/keywordize-keys)
+                                                          )]
+                                              (json-response {:saved result})))}}})
          "search" (yada/resource
                    {:id          :homepage
                     :description "Process search request"

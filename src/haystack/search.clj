@@ -1,6 +1,5 @@
 (ns haystack.search
-  (:require [clojure.walk :as walk]
-            [clojure.set :as set]
+  (:require [clojure.set :as set]
             [clojure.string :refer [split join]]
             [clojure.set :refer [rename-keys]]
 
