@@ -93,12 +93,14 @@
 
 (defn build-zero-ancestor
   [path]
-  (if-let [ids (drop 1 (string/split path #"/"))]
+  (if-let [ids (drop 1 (string/split (or path "") #"/"))]
     (let [path-history (atom [])]
       (map (fn [x]
              (swap! path-history conj x)
              {:key (str "/" (string/join "/" @path-history)) :doc_count 0})
            ids))))
+;; (build-zero-ancestor "")
+;; (build-zero-ancestor nil)
 ;; (build-zero-ancestor "/a/bc/d")
 
 (defn extract-aggregations
@@ -110,8 +112,8 @@
         cat-path (:category-path query-map)
         cat-path-level (inc (slash-count cat-path))
         ;; cat-ancestors (flatten (map #(categories-at-level cats %) (range 0 cat-path-level)))
-        cat-ancestors (if (< 0 cat-path-level)
-                        (if-let [ancestors (flatten (map #(categories-at-level cats %) (range 1 cat-path-level)))]
+        cat-ancestors (when (< 0 cat-path-level)
+                        (when-let [ancestors (flatten (map #(categories-at-level cats %) (range 1 cat-path-level)))]
                           (if (empty? ancestors)
                             (build-zero-ancestor cat-path)
                             ancestors
