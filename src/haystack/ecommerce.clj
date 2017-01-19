@@ -32,7 +32,7 @@
     (j/update! @db-map :products {:step_title title} ["matnr = ?" matnr])
     ))
 ;; (write-step ["000000000000001425" :old-title "new title"])
-;; (j/query @db-map "select * from products where matnr='000000000000001425'")
+;; (j/query @db-map ["select * from products where matnr = ?" (as-matnr 1425)])
 
 (defn process-step-file
   [f]

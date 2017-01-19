@@ -62,7 +62,6 @@
         name {:name snowball}
         descript {:description snowball}
         ]
-    (println "should have 1 shard")
     {:settings
      {:number_of_shards 1
       :number_of_replicas 1
