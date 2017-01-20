@@ -36,8 +36,7 @@
   []
   (let [groups (map #(string/split % #" ") synonym-list)
         syns (map (fn [[main & others]] (map #(string/join #"," [main %]) others)) groups)]
-    (vec (flatten syns))))
-
+    (flatten syns)))
 ;; (synonyms)
 
 (def ecommerce-mapping-types
@@ -80,7 +79,7 @@
         :snowball-filter {:type "snowball"
                           :language "English"}
         :synonym-filter {:type "synonym"
-                         :synonyms (synonyms)}
+                         :synonyms (vec (synonyms))}
         }
 
        :tokenizer
