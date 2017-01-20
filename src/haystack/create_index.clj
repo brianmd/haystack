@@ -23,11 +23,14 @@
   )
 
 (def synonym-list
-  ["romex nm"
-   "so seoow seow soow sow"
-   "pipe conduit"
+  [
+   "bx mc"
+   "exhaust fart"
    "gfi gfci"
-   "bx mc"])
+   "pipe conduit"
+   "romex nm"
+   "so seoow seow soow sow"
+   ])
 
 (defn synonyms
   []
