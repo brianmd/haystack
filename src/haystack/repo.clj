@@ -7,6 +7,7 @@
 ;; (def srv "http://192.168.0.220:9200")
 ;; (def srv "http://gandalf-the-white:9200")
 (def srv (or (System/getenv "ELASTICSEARCH_URL") "http://127.0.0.1:9200"))
+(println "elasticsearch url: " srv)
 
 (def index-name "searchecommerce")
 

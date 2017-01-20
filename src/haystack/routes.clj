@@ -31,16 +31,8 @@
                      "articles/" {"index.html" :article-index
                                   "article.html" :article}}])
 
-(def scheme "http")
-(def host "locahost:8080")
-
-;; (restart-server)
 (defn example-page [req]
-  (let [;; host (or (-> req :parameters :host) (System/getenv "HAYSTACK_HOST") "localhost:8080")
-        ;; scheme "http"
-        ;; base-url (str scheme "://" host)
-        base-url ""
-        ]
+  (let [base-url ""]
     {:status 200
      :body   (str "<html><body>Admin commands:<br/><a target='_blank' href='sql'>sql</a>, <a target='_blank' href='mappings'>mappings</a>, <a target='_blank' href='my-mappings'>my-mappings</a>, <a target='_blank' href='reload'>reload</a><br/><br/>Example searches:<br/><a target='_blank' href='" base-url "/api/v2/search?search=copper%20blue&category-path=/395&page-num=1&service-center-id=7&manufacturer-ids=[127,199]&query-entire=false" "'>multi-manufacturers</a> <a target='_blank' href='" base-url "/api/v2/search?search=783250301652&service-center-id=7&query-entire=false'>upc</a> <a target='_blank' href='" base-url "/api/v2/search?search=21234&page-num=1&query-entire=true'>matnr</a> <a target='_blank' href='" base-url "/api/v2/search?search=KL70581&page-num=1&query-entire=true'>part-num</a> <a target='_blank' href='" base-url "/api/v2/search?search=copper%201388727&category-path=/395&page-num=1&query-entire=false" "'>bad</a> <a target='_blank' href='" base-url "/api/v2/search?search=wacky&page-num=1&query-entire=false" "'>stibo</a></body></html>")}
     ))

@@ -15,9 +15,6 @@
              [haystack.ecommerce :as ecommerce]
              [haystack.query :as query]
              [haystack.feedback :as feedback]
-             ;; [com.murphydye/mishmash :as mm]
-             ;; [summit.utils.core :refer :all]
-             ;; [summit.db.relationships :as db]
              ))
 
 (def scrunch-characters
