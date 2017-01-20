@@ -30,10 +30,3 @@
            ~'*matnrs* (matnrs ~'*response*)]
        ~@tests))
   )
-
-;; (macroexpand-1 '(test-search abc {:search "beef"}
-;;                            (max-docs 50)))
-;; (macroexpand '(test-search abc {:search "beef"}
-;;                            (max-docs 50)))
-;; (macroexpand '(deftest abc (let [result (search {:search "beef"})])))
-
