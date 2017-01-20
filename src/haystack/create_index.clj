@@ -79,7 +79,7 @@
         :snowball-filter {:type "snowball"
                           :language "English"}
         :synonym-filter {:type "synonym"
-                         :synonyms (vec (synonyms))}
+                         :synonyms (synonyms)}
         }
 
        :tokenizer
@@ -89,7 +89,6 @@
         :scrunch-tokenizer {:type "nGram"
                             :min_gram "4"
                             :max_gram "15"}
-        ;; :part-num-tokenizer {:type "ngram" :min_gram 3 :max_gram 8}
         }
 
        :analyzer
