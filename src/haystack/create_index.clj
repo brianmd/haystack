@@ -36,25 +36,19 @@
   []
   (let [groups (map #(string/split % #" ") synonym-list)
         syns (map (fn [[main & others]] (map #(string/join #"," [main %]) others)) groups)]
-    (flatten syns)))
+    (vec (flatten syns))))
 
 ;; (synonyms)
 
 (def ecommerce-mapping-types
   (let [;; analyzers
-        ;; snowball {:type "string" :analyzer "snowball" :store true}
-        ;; snowball {:type "string" :analyzer "snowball" :index_options "offsets" :store true}
-        ;; snowball {:type "string" :analyzer "snowball"}
         snowball {:type "string" :analyzer "synonym-snowball"}
         part-num {:type "string" :analyzer "part-num-analyzer"}
-        ;; part-num {:type "string"}
         string {:type "string"}
         integer {:type "integer"}
         long {:type "long"}
         ignore-int {:type "integer" :include_in_all false}
         path {:type "string" :analyzer "path-analyzer"}
-        ;; path {:type "string" :index "not_analyzed"}
-        ;; path {:type "string"}
         date {:type "date", :format "strict_date_optional_time||epoch_millis"}
         upc {:type "string" :analyzer "upc-analyzer"}
 
@@ -86,11 +80,7 @@
         :snowball-filter {:type "snowball"
                           :language "English"}
         :synonym-filter {:type "synonym"
-                         :synonyms
-                         ;; ["romex,nm"]
-                         ["romex,nm" "so,seoow" "so,seow" "so,soow" "so,sow" "pipe,conduit" "gfi,gfci" "bx,mc"]
-                         ;;(synonyms)
-                         }
+                         :synonyms (synonyms)}
         }
 
        :tokenizer
@@ -132,9 +122,6 @@
                :manufacturer-name snowball
                :product-class snowball
                :matnr {:type "string"}
-               ;; :matnr {:type "string" :tokenizer "keyword"}
-               ;; :matnr long
-               ;; :matnr {:type "string" :analyzer "not_analyzed" :search_analyzer "not_analyzed"}
 
                :manufacturer-part-number part-num
                :summit-part-number part-num
@@ -152,14 +139,6 @@
                :manufacturer-id ignore-int
                })}}
        }))
-
-;; (do
-;;   (esi/delete haystack.repo/repo "testing")
-;;   (esi/create haystack.repo/repo "testing" ecommerce-mapping-types)
-;;   ;; curl '192.168.0.220:9201/testing/_analyze?pretty=1&analyzer=part-num-analyzer' -d 'FC;(!- %^/&>a@<,:#''}{`_~][+|="$\?,c]'})
-;;   ;;   => should return only one ngram
-;;   )
-
 
 (defn bulk-create-all
   "adds all docs in one shot"
