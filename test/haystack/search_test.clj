@@ -21,3 +21,11 @@
  (in-top 2542450 2)
  )
 
+(test-search
+ copper-clip-check
+ {:search "copper clip" :num-per-page 100}
+ (max-docs 100)
+ (in-top 20127 100)   ;; "copper" and "clip" not in the same field
+ (in-top 3336524 100) ;; "clip" is in the part number
+ )
+
