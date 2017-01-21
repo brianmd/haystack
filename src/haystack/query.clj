@@ -28,7 +28,8 @@
   (if (string? s)
     (if-let [token (re-find #"\d+" s)]
       (if (string? token)
-        (Long. token)))))
+        (Long. token)))
+    s))
 
 (defn ->long [s]
   (if-let [l (parse-long s)]
@@ -39,7 +40,8 @@
   (if (string? s)
     (if-let [token (re-find #"\d+\.?\d+" s)]
       (if (string? token)
-        (Double. token)))))
+        (Double. token)))
+    s))
 ;; (assert (= (parse-float "$2.32 ea 44.2") 2.32))
 
 (defn slash-count
@@ -127,7 +129,7 @@
 
 (defn extract-paging
   [query-map response]
-  (let [num-per-page (-> (->long (-> query-map :num-per-page)) (max 10) (min 100))
+  (let [num-per-page (-> (->long (-> query-map :num-per-page)) (min 100) (max 10))
         page-num (-> (->long (-> query-map :page-num)) (max 1))
         total-items (-> response :hits :total)]
     {:page-num page-num

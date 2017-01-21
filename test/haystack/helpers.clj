@@ -19,6 +19,13 @@
   [response]
   (map #(extract-digits (:matnr %)) (-> response :documents)))
 
+
+;; --------------------------------------------------------------- helper macros
+
+(defmacro print-info
+  []
+  `(println (-> ~'*response* :paging) "\n" (matnrs ~'*response*)))
+
 (defmacro min-docs
   "raise test error if less than n possible documents in search response.
   This is the number of hits, not the number documents returned in this page."
