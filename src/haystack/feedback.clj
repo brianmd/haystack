@@ -26,16 +26,13 @@
 
 (defn get-feedback
   []
-  (esd/search r/repo "searchecommerce" "feedback" ""))
+  (esd/search r/repo "feedback" "feedback" {:query {:match_all {}} :size 2000}))
 
 (defn save-feedback
   [query-map]
-  (let [;;query-map (-> ctx :parameters :query walk/keywordize-keys)
-        query-map (merge
+  (let [query-map (merge
                    query-map
                    {:created-on (java.util.Date.)})]
-    ;; (println "in save-feedback")
-    ;; (println (-> ctx :parameters :query walk/keywordize-keys))
     (prn query-map)
     (try
       (esd/create r/repo "feedback" "feedback" query-map)

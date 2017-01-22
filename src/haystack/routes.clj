@@ -115,14 +115,21 @@
                      {:id :feedback
                       :description "Post feedback"
                       :access-control {:allow-origin "*"
+                                       :allow-headers "Origin, X-Requested-With, Content-Type, Accept"
                                        :allow-methods #{:get :post}
                                        :allow-credentials false
-                                       :expose-headers #{"X-Custom"}}
-                      :consumes    {:media-type #{"application/json" "application/transit" "application/transmit+json"}}
+                                       :expose-headers #{"X-Custom"}
+                                       }
+                      ;; :consumes    {:media-type #{"application/json" "application/transit" "application/transmit+json"}}
+                      :consumes    {:media-type "application/json"}
                       :produces    {:media-type "application/json"}
                       :methods
                       {:get
-                       {:response (fn [ctx] (let [result (feedback/save-feedback
+                       {:response (fn [_]
+                                    (json-response (feedback/get-feedback)))}
+                       :post
+                       {:response (fn [ctx] (println "save feedback")
+                                    (let [result (feedback/save-feedback
                                                           (-> ctx :parameters :query walk/keywordize-keys)
                                                           )]
                                               (json-response {:saved result})))}}})
