@@ -21,7 +21,6 @@
         "already-existed"
         (do
           (println "error in index create")
-          (println (re-find #"already.exists" (str e)))
           (throw e))))))
 
 (defn get-feedback
