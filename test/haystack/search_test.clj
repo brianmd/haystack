@@ -15,6 +15,9 @@
 ;; Defining these search use cases is an attempt
 ;; at preventing these perturbations of the force.
 
+;; In general, we should define a failing test before
+;; modifying the algorithm.
+
 (test-search matnrs-check
  {:search "2843977 2542450"}
  (max-docs 50)
@@ -43,7 +46,7 @@
 ;; needs to remain, because "12pvc" should be valid hits.
 (test-search pvc-check
  {:search "2pvc"}
- (not-in-top 10 29531)
- (in-top 10 29797)
+ (not-in-top 10 29531)  ;; summit part #: 12PVC
+ (in-top 10 29797)      ;; summit part #: 2PVCC
  )
 
