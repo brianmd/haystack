@@ -41,14 +41,24 @@
 (defmacro not-in-top
   "raise error if document with given matnr is within the top n results.
   Use this to ensure a specific document is not scored high."
-  [matnr n]
-  `(is (not (contains? (set (take ~n ~'*matnrs*)) (str ~matnr)))))
+  [n & matnrs]
+  `(doseq [~'matnr (vector ~@matnrs)]
+     (is (not (contains? (set (take ~n ~'*matnrs*)) (str ~'matnr))))))
 
+(defmacro iin-top
+  "raise error if document with given matnr isn't within the top n results.
+  Note: if n>10, should include :num-per-page in search query-map."
+  [n & matnrs]
+  `(doall
+    (map (fn [~'matnr]
+           (is (contains? (set (take ~n ~'*matnrs*)) (str ~'matnr))))
+         (vector ~@matnrs))))
 (defmacro in-top
   "raise error if document with given matnr isn't within the top n results.
   Note: if n>10, should include :num-per-page in search query-map."
-  [matnr n]
-  `(is (contains? (set (take ~n ~'*matnrs*)) (str ~matnr))))
+  [n & matnrs]
+  `(doseq [~'matnr (vector ~@matnrs)]
+     (is (contains? (set (take ~n ~'*matnrs*)) (str ~'matnr)))))
 
 (defmacro test-search
   "define search use case"
@@ -56,5 +66,23 @@
   `(deftest ~name
      (let [~'*response* (search ~query-map)
            ~'*matnrs* (matnrs ~'*response*)]
-       ~@tests))
-  )
+       ~@tests)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

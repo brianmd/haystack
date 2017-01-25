@@ -18,22 +18,21 @@
 (test-search matnrs-check
  {:search "2843977 2542450"}
  (max-docs 50)
- (in-top 2843977 2)
- (in-top 2542450 2)
+ (in-top 2 2843977 2542450)
  )
 
 (test-search upcs-check
  {:search "078477045442 980100350109"}
  (max-docs 500)
- (in-top 199152 2)
- (in-top 2542450 2)
+ (in-top 2 199152 2542450)
  )
 
 (test-search copper-clip-check
  ;; set num-per-page to return up to 100 documents
  {:search "copper clip" :num-per-page 100}
  (max-docs 100)
- (in-top 20127 100)   ;; "copper" and "clip" not in the same field
- (in-top 3336524 100) ;; "clip" is in the part number
+ ;; 20127: "copper" and "clip" not in the same field
+ ;; 3336524: "clip" is in the part number
+ (in-top 100 20127 3336524)
  )
 
