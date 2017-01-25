@@ -36,3 +36,14 @@
  (in-top 100 20127 3336524)
  )
 
+;; this is a failing test
+;; issue is some "^12pvc" documents score higher than "^2pvc"
+;; to fix, add part numbers to an edge-ngram and score it
+;; higher than the ngram version. Note that the ngram version
+;; needs to remain, because "12pvc" should be valid hits.
+(test-search pvc-check
+ {:search "2pvc"}
+ (not-in-top 10 29531)
+ (in-top 10 29797)
+ )
+
