@@ -50,3 +50,10 @@
  (in-top 10 29797)      ;; summit part #: 2PVCC
  )
 
+;; should upcs and matnrs should match even if not locally stocked?
+(test-search upcs-local-stock-check
+ {:search "078477045442 980100350109" :service-center-id abq-sc}
+ (max-docs 500)
+ (in-top 2 199152 2542450)
+ )
+
