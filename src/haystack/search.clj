@@ -13,7 +13,8 @@
             [haystack.query :as query]
 
             [haystack.ecommerce :refer [find-category-by-path find-manufacturer]]
-            ))
+            )
+  (:import [java.net ConnectException SocketException]))
 
 (defn merge-aggregation-names
   [aggregations]
@@ -57,7 +58,15 @@
 (defn process-search
   [query-map]
   (let [q (query/build-search-query query-map)
-        response (try (esd/search repo "searchecommerce" "productplus" q) (catch Throwable e {}))
+        response (try (esd/search repo "searchecommerce" "productplus" q)
+                      (catch Throwable e
+                        (println e) (println "err type:" (type e)) (prn (type e))
+                        (condp = (type e)
+                          java.net.ConnectException (println "connection error")
+                          java.net.SocketException (println "socket error. Elasticsearch may have just come back and next search request may work.")
+                          (println "error type:" (type e))
+                          )
+                        {}))
         aggregations (query/extract-aggregations query-map response)
         named-aggregations (merge-aggregation-names aggregations)
         ]
