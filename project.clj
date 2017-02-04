@@ -9,9 +9,9 @@
 
                  [org.clojure/data.csv "0.1.3"]
 
-                 [bidi "2.0.14"]
+                 [bidi "2.0.16"]
                  [aleph "0.4.1"]
-                 [yada "1.1.46"]
+                 [yada "1.2.0"]
 
                  ;; these are temporary. eventually will call an ecommerce service for this data
                  [mysql/mysql-connector-java "5.1.6"]
