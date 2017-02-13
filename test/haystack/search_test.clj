@@ -57,3 +57,11 @@
  (in-top 2 199152 2542450)
  )
 
+
+;; This is a failing test as it highlights the whole manufacturer part number.
+;; It is commented out because we don't yet have the "highlighted" test.
+;; (test-search highlight-check
+;;              {:search "allied molded"}
+;;              (highlighted :manufacturer-part-number "Alli")
+;;              )
+
