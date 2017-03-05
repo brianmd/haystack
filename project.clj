@@ -16,7 +16,7 @@
                  ;; these are temporary. eventually will call an ecommerce service for this data
                  [mysql/mysql-connector-java "5.1.6"]
                  [org.clojure/java.jdbc "0.3.7"]
-                 [com.murphydye/mishmash "0.1.0-SNAPSHOT"]
+                 [com.murphydye/mishmash "0.1.1-SNAPSHOT"]
                  ]
   :main ^:skip-aot haystack.core
   :target-path "target/%s"
