@@ -16,7 +16,13 @@
             [haystack.create-index :as create-index]
 
             [haystack.ecommerce :as ecommerce]
+
+            [mishmash.event-logger :as event-logger]
+            [mishmash.http-handlers :as http-handlers]
+            [mishmash.log :as l]
             ))
+
+(swap! http-handlers/base-event assoc :program "haystack")
 
 (defn simple-text-page
   [text]
@@ -129,10 +135,13 @@
                                     (json-response (feedback/get-feedback)))}
                        :post
                        {:response (fn [ctx] (println "save feedback")
-                                    (let [result (feedback/save-feedback
-                                                          (-> ctx :parameters :query walk/keywordize-keys)
-                                                          )]
-                                              (json-response {:saved result})))}}})
+                                    (let [params (-> ctx :parameters :query walk/keywordize-keys)]
+                                      (event-logger/log-duration
+                                       {:service "haystack-feedback-duration" :request "search" :params params :tags ["feedback" "haystack" "duration"]}
+                                       #(let [result (feedback/save-feedback params)]
+                                         (json-response {:saved result})))))
+                        }}})
+
          "search" (yada/resource
                    {:id          :homepage
                     :description "Process search request"
@@ -148,9 +157,11 @@
                     :methods
                     {:get
                      {:response (fn [ctx]
-                                  ;; (println (keys ctx))
-                                  ;; (println (-> ctx :parameters))
-                                  (search/search (-> ctx :parameters :query walk/keywordize-keys))
+                                  (let [params (-> ctx :parameters :query walk/keywordize-keys)]
+                                    (event-logger/log-duration
+                                     {:service "haystack-search-duration" :request "search" :params params :tags ["haystack" "duration" "search"]}
+                                     #(search/search params)
+                                     ))
                                   ;; (search ctx)
                                   )}}})
          ;; {:response (fn [ctx] {:path (-> ctx :parameters :path)

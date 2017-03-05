@@ -185,6 +185,7 @@
    )
   (println "finished reloading")
   )
+;; (reload haystack.repo/repo "searchecommerce")
 
 
 
