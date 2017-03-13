@@ -19,5 +19,6 @@
                  [com.murphydye/mishmash "0.1.1-SNAPSHOT"]
                  ]
   :main ^:skip-aot haystack.core
+  ;; :jvm-opts ["-Xss6G" "-Xms6g"]
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
