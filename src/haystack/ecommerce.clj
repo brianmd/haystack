@@ -85,7 +85,6 @@ ON (`products`.`id` = `ss`.`product_id`)
 
 
 
-
 (def product-query-sql
 "SELECT
 now() AS 'updated-at',
@@ -95,9 +94,9 @@ now() AS 'updated-at',
 `products`.`product_class_id` AS `product-class-id`,
 `categories_products`.`category_id` AS `category-id`,
 `categories`.`parent_id` AS `category-parent-id`,
-`solr_categories`.`category_ids` AS `category-ids`,
-`solr_categories`.`category_path` AS `category-path`,
-`solr_service_centers`.`service_center_ids` AS `service-center-ids`,
+`search_categories`.`category_ids` AS `category-ids`,
+`search_categories`.`category_path` AS `category-path`,
+`search_service_centers`.`service_center_ids` AS `service-center-ids`,
 IFNULL(`products`.`step_title`,`products`.`name`) AS `name`,
 IFNULL(`products`.`step_description`,`products`.`long_description`) AS `description`,
 `products`.`upc` AS `upc`,
@@ -114,12 +113,21 @@ LEFT JOIN `external_files`
   ON (`products`.`id` = `external_files`.`product_id` and `external_files`.`type` = 'image')
 LEFT JOIN `categories_products`
 ON (`products`.`id` = `categories_products`.`product_id`)
-LEFT JOIN `solr_categories`
-ON (`categories_products`.`category_id` = `solr_categories`.`category_id`)
+LEFT JOIN
+(
+ SELECT `solr_category_ancestors`.`descendant_id` AS `category_id`,group_concat(`categories`.`id` order by `solr_category_ancestors`.`generations` DESC separator ',') AS `category_ids`,concat('/',group_concat(`categories`.`id` order by `solr_category_ancestors`.`generations` DESC separator '/')) AS `category_path`
+ FROM ((`category_hierarchies` `solr_category_ancestors` join `category_hierarchies` `solr_category_descendants` on((`solr_category_ancestors`.`descendant_id` = `solr_category_descendants`.`ancestor_id`))) join `categories` on((`solr_category_ancestors`.`ancestor_id` = `categories`.`id`))) where (`solr_category_descendants`.`generations` = 0) group by `solr_category_descendants`.`descendant_id`
+) AS `search_categories`
+ON (`categories_products`.`category_id` = `search_categories`.`category_id`)
 LEFT JOIN `product_classes`
 ON (`products`.`product_class_id` = `product_classes`.`id`)
-LEFT JOIN `solr_service_centers`
-ON (`products`.`id` = `solr_service_centers`.`product_id`)
+LEFT JOIN
+(
+ SELECT `stock_statuses`.`product_id` AS `product_id`,group_concat(`stock_statuses`.`service_center_id` separator ',') AS `service_center_ids`
+ FROM `stock_statuses` where (`stock_statuses`.`eod_qty` > 0) group by `stock_statuses`.`product_id`
+) AS `search_service_centers`
+ON (`products`.`id` = `search_service_centers`.`product_id`)
+
 LEFT JOIN `manufacturers`
 ON (`products`.`manufacturer_id` = `manufacturers`.`id`)
 LEFT JOIN `categories`
@@ -130,19 +138,19 @@ LEFT JOIN
  FROM `category_hierarchies`
  GROUP BY 1
  HAVING MAX(`category_hierarchies`.`generations`) = 0
- )
-AS `leaves`
+ ) AS `leaves`
 ON (`categories`.`id` = `leaves`.`ancestor_id`)
 INNER JOIN
 (
- SELECT MAX(`stock_statuses`.`product_id`) as `product_id`, SUM(`stock_statuses`.`eod_qty`) as `eod_qty`
+ SELECT `stock_statuses`.`product_id` as `product_id`, SUM(`stock_statuses`.`eod_qty`) as `eod_qty`
  FROM `stock_statuses`
  GROUP BY `stock_statuses`.`product_id`
- )
-AS `ss`
+ ) AS `ss`
 ON (`products`.`id` = `ss`.`product_id`)
 ;
 ")
+
+;; (println "\n\n" product-query-sql)
 
 (defn clean-product-plus [m]
   (cond-> m
