@@ -11,7 +11,7 @@
 
                  [bidi "2.0.16"]
                  [aleph "0.4.1"]
-                 [yada "1.2.0"]
+                 [yada "1.2.1"]
 
                  ;; these are temporary. eventually will call an ecommerce service for this data
                  [mysql/mysql-connector-java "5.1.6"]
