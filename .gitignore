@@ -24,4 +24,5 @@ oracle-meta
 *.trc
 /.docker-state
 .envrc
+TAGS
 
