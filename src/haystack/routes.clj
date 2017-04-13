@@ -190,6 +190,7 @@
 
 (defn start-server
   []
+  (println "listening on port " 8080)
   (let [listener (yada/listener
                   routes
                   {:port 8080

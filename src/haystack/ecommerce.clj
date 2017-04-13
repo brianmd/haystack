@@ -1,8 +1,8 @@
+;; Load ecommerce data into elasticsearch
+
 (ns haystack.ecommerce
   (:require [clojure.java.jdbc :as j]
-            [clojure.string :refer [split]]
-            [clojure.data.csv :as csv]
-            ))
+            [clojure.string :as string]))
 
 (def ^:private categories-atom (atom nil))
 (def ^:private manufacturers-atom (atom nil))
@@ -18,28 +18,6 @@
                    :subname (or (System/getenv "DB_HOST") "//localhost:3306/blue_harvest_dev")
                    :user (or (System/getenv "DB_USER") "user")
                    :password (or (System/getenv "DB_PW") "pw")}))
-
-(defn as-matnr
-  [s]
-  (let [s (str s)
-        zeroed (str "000000000000000000" s)]
-    (subs zeroed (count s))))
-
-(defn write-step
-  [data]
-  (let [matnr (as-matnr (first data))
-        title (nth data 2)]
-    (j/update! @db-map :products {:step_title title} ["matnr = ?" matnr])
-    ))
-;; (write-step ["000000000000001425" :old-title "new title"])
-;; (j/query @db-map ["select * from products where matnr = ?" (as-matnr 1425)])
-
-(defn process-step-file
-  [f]
-  (with-open [in (clojure.java.io/reader "/home/bmd/Downloads/step-titles.csv")]
-    (doall
-     (map f (csv/read-csv in)))))
-;; (process-step-file write-step)
 
 
 
@@ -168,9 +146,7 @@ INNER JOIN
  GROUP BY `stock_statuses`.`product_id`
  ) AS `ss`
   ON (`products`.`id` = `ss`.`product_id`)
-;")
-
-;; (println "\n\n" product-query-sql)
+; ")
 
 (defn clean-product-plus [m]
   (cond-> m
@@ -178,11 +154,11 @@ INNER JOIN
 
     (not-empty (:service-center-ids m))
     (assoc :service-center-ids
-           (map read-string (split (:service-center-ids m) #",")))
+           (map read-string (string/split (:service-center-ids m) #",")))
 
     (not-empty (:category-ids m))
     (assoc :category-ids
-           (map read-string (split (:category-ids m) #",")))
+           (map read-string (string/split (:category-ids m) #",")))
 
     (not-empty (:matnr m))
     (assoc :matnr
@@ -235,7 +211,7 @@ join solr_categories solr on solr.category_id=c.id"]
 (defn find-category-by-path
   "find category for given path"
   [path]
-  ((categories) (-> (split path #"/") last read-string)))
+  ((categories) (-> (string/split path #"/") last read-string)))
 
 (defn find-category [id]
   ((categories) id))
