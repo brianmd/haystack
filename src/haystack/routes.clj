@@ -16,6 +16,7 @@
             [haystack.create-index :as create-index]
 
             [haystack.ecommerce :as ecommerce]
+            [haystack.load-step-data :as load-step-data]
 
             [mishmash.event-logger :as event-logger]
             [mishmash.http-handlers :as http-handlers]
