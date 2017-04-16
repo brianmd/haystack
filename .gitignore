@@ -23,6 +23,7 @@ oracle-meta
 /docker/lein
 *.trc
 /.docker-state
+/docker.env
 .envrc
 TAGS
 

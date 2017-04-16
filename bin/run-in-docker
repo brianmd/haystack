@@ -1,0 +1,3 @@
+#!/bin/sh
+docker run --rm -it --env-file ./docker.env -v "$PWD":/usr/src/myapp -w /usr/src/myapp -p 8080:8080 --add-host mark-docker01.insummit.com:10.5.0.46 java:8-alpine java -jar target/uberjar/haystack-0.1.0-SNAPSHOT-standalone.jar
+

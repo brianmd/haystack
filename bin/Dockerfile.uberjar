@@ -1,0 +1,8 @@
+FROM java:8-alpine
+MAINTAINER Brian Murphy-Dye <bmurphydye@summit.com>
+
+ADD target/uberjar/haystack-0.1.0-SNAPSHOT-standalone.jar /app/app.jar
+
+EXPOSE 8080
+
+CMD ["java", "-jar", "/app/app.jar"]
